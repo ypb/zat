@@ -3132,7 +3132,7 @@ cmd_delete_bookmark(int argc, char** argv)
     if(!strcmp(id->str, Zathura.Bookmarks.bookmarks[i].id))
     {
       /* update key file */
-      g_key_file_remove_key(Zathura.Bookmarks.data, Zathura.PDF.file, Zathura.Bookmarks.bookmarks[i].id, NULL);
+      g_key_file_remove_key(Zathura.Bookmarks.data, Zathura.PDF.uid, Zathura.Bookmarks.bookmarks[i].id, NULL);
 
       g_free(Zathura.Bookmarks.bookmarks[i].id);
       /* update bookmarks */
