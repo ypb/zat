@@ -304,6 +304,7 @@ struct
   {
     PopplerDocument *document;
     char            *file;
+    char            *uid;
     char            *password;
     Page           **pages;
     int              page_number;
@@ -1063,6 +1064,9 @@ close_file(gboolean keep_monitor)
       g_key_file_set_integer(Zathura.Bookmarks.data, Zathura.PDF.file,
           BM_PAGE_OFFSET, Zathura.PDF.page_offset);
     }
+    /* save uid=filename */
+    g_key_file_set_string(Zathura.Bookmarks.data, Zathura.PDF.file,
+          Zathura.PDF.uid, Zathura.PDF.file);
 
     /* save bookmarks */
     int i;
@@ -1111,8 +1115,10 @@ close_file(gboolean keep_monitor)
   if(!keep_monitor)
   {
     g_free(Zathura.PDF.file);
+    g_free(Zathura.PDF.uid);
     g_free(Zathura.PDF.password);
     Zathura.PDF.file            = NULL;
+    Zathura.PDF.uid             = NULL;
     Zathura.PDF.password        = NULL;
     Zathura.PDF.page_number     = 0;
     Zathura.PDF.scale           = 0;
@@ -1341,6 +1347,9 @@ open_file(char* path, char* password)
   g_static_mutex_unlock(&(Zathura.Lock.pdflib_lock));
   g_free(Zathura.PDF.file);
   Zathura.PDF.file            = file;
+  char* tfile = g_strdup(file);
+  Zathura.PDF.uid = g_compute_checksum_for_string(G_CHECKSUM_MD5, basename(tfile), -1);
+  g_free(tfile);
   Zathura.PDF.scale           = 100;
   Zathura.PDF.rotate          = 0;
   if(Zathura.State.filename)
@@ -1401,7 +1410,7 @@ open_file(char* path, char* password)
 
     for(i = 0; i < number_of_keys; i++)
     {
-      if(strcmp(keys[i], BM_PAGE_ENTRY) && strcmp(keys[i], BM_PAGE_OFFSET))
+      if(strcmp(keys[i], BM_PAGE_ENTRY) && strcmp(keys[i], BM_PAGE_OFFSET) && strcmp(keys[i], Zathura.PDF.uid))
       {
         Zathura.Bookmarks.bookmarks = realloc(Zathura.Bookmarks.bookmarks,
             (Zathura.Bookmarks.number_of_bookmarks + 1) * sizeof(Bookmark));
@@ -1546,7 +1555,7 @@ read_bookmarks_file(void)
   if(!g_file_test(Zathura.Bookmarks.file, G_FILE_TEST_IS_REGULAR))
   {
     /* file does not exist */
-    g_file_set_contents(Zathura.Bookmarks.file, "# Zathura bookmarks\n", -1, NULL);
+    g_file_set_contents(Zathura.Bookmarks.file, "# Zathura bookmarks (using MD5s of full paths' basenames)\n", -1, NULL);
   }
 
   GError* error = NULL;
