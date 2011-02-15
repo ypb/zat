@@ -1,0 +1,6 @@
+#!/bin/sh
+
+ZATBMSFILE=$HOME/.local/share/zathura/bookmarks
+
+[ -r ${ZATBMSFILE} ] && grep '=/' ${ZATBMSFILE}  | cut -d'=' -f2
+
