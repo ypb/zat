@@ -8,6 +8,7 @@ SOURCE   = zathura.c
 MANPAGE  = zathura.1
 OBJECTS  = ${SOURCE:.c=.o}
 DOBJECTS = ${SOURCE:.c=.do}
+SCRIPTS  = bms
 
 all: options ${PROJECT}
 
@@ -64,7 +65,7 @@ gdb: debug
 
 dist: clean
 	@mkdir -p ${PROJECT}-${VERSION}
-	@cp -R LICENSE Makefile config.mk config.def.h README \
+	@cp -R LICENSE Makefile config.mk config.def.h README ${SCRIPTS:%=script/%} \
 			${MANPAGE} ${SOURCE} ${PROJECT}-${VERSION}
 	@tar -cf ${PROJECT}-${VERSION}.tar ${PROJECT}-${VERSION}
 	@gzip ${PROJECT}-${VERSION}.tar
@@ -79,9 +80,13 @@ install: all
 	@mkdir -p ${DESTDIR}${MANPREFIX}/man1
 	@sed "s/VERSION/${VERSION}/g" < ${MANPAGE} > ${DESTDIR}${MANPREFIX}/man1/${PROJECT}.1
 	@chmod 644 ${DESTDIR}${MANPREFIX}/man1/${PROJECT}.1
+	@for f in ${SCRIPTS} ; do into=${DESTDIR}${PREFIX}/bin/${PROJECT}.$$f ; \
+	  cp script/$$f $$into && chmod +x $$into ; done
 
 uninstall:
 	@echo removing executable file
 	@rm -f ${DESTDIR}${MANPREFIX}/bin/${PROJECT}
 	@echo removing manual page
 	@rm -f ${DESTDIR}${MANPREFIX}/man1/${PROJECT}.1
+	@for f in ${SCRIPTS} ; do into=${DESTDIR}${PREFIX}/bin/${PROJECT}.$$f ; \
+	  rm -f $$into ; done
